@@ -1,0 +1,553 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="herramientaAjustada" pageWidth="612" pageHeight="792" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="e186dc8f-2142-4435-b969-5e3421c0b80a">
+	<property name="ireport.zoom" value="1.0"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<style name="table">
+		<box>
+			<pen lineWidth="1.0" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="table_TH" mode="Opaque" backcolor="#F0F8FF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="table_CH" mode="Opaque" backcolor="#BFE1FF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="table_TD" mode="Opaque" backcolor="#FFFFFF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<subDataset name="Table Dataset 1" uuid="2d75dbd1-1968-4092-be82-351e879136fe">
+		<parameter name="APRIETE" class="java.lang.String">
+			<defaultValueExpression><![CDATA["0"]]></defaultValueExpression>
+		</parameter>
+		<queryString>
+			<![CDATA[SELECT DISTINCT
+ald.tx_apriete as det_apriete,
+(SELECT iald.num_val_apriete AS det_val_apriete FROM herramientas.tbl_aprietes_logs_detalle AS iald WHERE iald.idaprietelog = ald.idaprietelog AND iald.tx_apriete = ald.tx_apriete ORDER BY iald.fecha DESC LIMIT 1),
+(SELECT CASE WHEN iald.tx_condicion = 'ALTA' THEN iald.linea2 ELSE iald.linea1 END AS det_val_apli_apriete FROM herramientas.tbl_aprietes_logs_detalle AS iald WHERE iald.idaprietelog = ald.idaprietelog AND iald.tx_apriete = ald.tx_apriete ORDER BY iald.fecha DESC LIMIT 1),
+(SELECT iald.auxiliar1 AS det_auxiliar_1 FROM herramientas.tbl_aprietes_logs_detalle AS iald WHERE iald.idaprietelog = ald.idaprietelog AND iald.tx_apriete = ald.tx_apriete ORDER BY iald.fecha DESC LIMIT 1),
+(SELECT iald.auxiliar2 AS det_auxiliar_2 FROM herramientas.tbl_aprietes_logs_detalle AS iald WHERE iald.idaprietelog = ald.idaprietelog AND iald.tx_apriete = ald.tx_apriete ORDER BY iald.fecha DESC LIMIT 1)
+FROM
+herramientas.tbl_aprietes_logs_detalle ald
+
+WHERE
+ald.idaprietelog  = $P{APRIETE}::integer ORDER BY ald.tx_apriete ASC]]>
+		</queryString>
+		<field name="det_apriete" class="java.lang.String"/>
+		<field name="det_val_apriete" class="java.math.BigDecimal"/>
+		<field name="det_val_apli_apriete" class="java.math.BigDecimal"/>
+		<field name="det_auxiliar_1" class="java.math.BigDecimal"/>
+		<field name="det_auxiliar_2" class="java.math.BigDecimal"/>
+	</subDataset>
+	<subDataset name="New Dataset 1" uuid="e721a19d-fa0f-4682-af89-b59e223917bd">
+		<queryString language="SQL">
+			<![CDATA[SELECT DISTINCT
+ald.tx_apriete as det_apriete,
+(SELECT iald.num_val_apriete AS det_val_apriete FROM herramientas.tbl_aprietes_logs_detalle AS iald WHERE iald.idaprietelog = ald.idaprietelog AND iald.tx_apriete = ald.tx_apriete ORDER BY iald.fecha DESC LIMIT 1),
+(SELECT CASE WHEN iald.tx_condicion = 'ALTA' THEN iald.linea2 ELSE iald.linea1 END AS det_val_apli_apriete FROM herramientas.tbl_aprietes_logs_detalle AS iald WHERE iald.idaprietelog = ald.idaprietelog AND iald.tx_apriete = ald.tx_apriete ORDER BY iald.fecha DESC LIMIT 1),
+(SELECT iald.auxiliar1 AS det_auxiliar_1 FROM herramientas.tbl_aprietes_logs_detalle AS iald WHERE iald.idaprietelog = ald.idaprietelog AND iald.tx_apriete = ald.tx_apriete ORDER BY iald.fecha DESC LIMIT 1),
+(SELECT iald.auxiliar2 AS det_auxiliar_2 FROM herramientas.tbl_aprietes_logs_detalle AS iald WHERE iald.idaprietelog = ald.idaprietelog AND iald.tx_apriete = ald.tx_apriete ORDER BY iald.fecha DESC LIMIT 1)
+FROM
+herramientas.tbl_aprietes_logs_detalle ald
+
+WHERE
+ald.idaprietelog = 18
+ORDER BY ald.tx_apriete ASC]]>
+		</queryString>
+		<field name="det_apriete" class="java.lang.String"/>
+		<field name="det_val_apriete" class="java.math.BigDecimal"/>
+		<field name="det_val_apli_apriete" class="java.math.BigDecimal"/>
+		<field name="det_auxiliar_1" class="java.math.BigDecimal"/>
+		<field name="det_auxiliar_2" class="java.math.BigDecimal"/>
+	</subDataset>
+	<parameter name="PAHT_ICON" class="java.lang.String"/>
+	<parameter name="AJUSTE" class="java.lang.String"/>
+	<parameter name="PAHT_GRAFICA" class="java.lang.String"/>
+	<queryString>
+		<![CDATA[select
+lpad(al.id::text, 8,'0') as nro_reporte,
+al.cliente AS cli_reporte,
+h.tx_district as codigo_herr_reporte,
+h.tx_nombre AS herr_reporte,
+h.tx_serial AS ser_herr_reporte,
+to_char(al.fecha, 'dd/MM/YYYY') as fecha_reporte,
+al.odt AS odt_reporte,
+CONCAT(o.tx_nombre, ' ', o.tx_apellido) as op_reporte
+
+from
+herramientas.tbl_aprietes_logs AS al
+INNER JOIN herramientas.tbl_herramientas AS h ON al.idherramienta = h.id
+INNER JOIN entidades.tbl_operador AS o ON o.id = al.idoperador
+
+where al.id = $P{AJUSTE}::integer]]>
+	</queryString>
+	<field name="nro_reporte" class="java.lang.String"/>
+	<field name="cli_reporte" class="java.lang.String"/>
+	<field name="codigo_herr_reporte" class="java.lang.String"/>
+	<field name="herr_reporte" class="java.lang.String"/>
+	<field name="ser_herr_reporte" class="java.lang.String"/>
+	<field name="fecha_reporte" class="java.lang.String"/>
+	<field name="odt_reporte" class="java.lang.String"/>
+	<field name="op_reporte" class="java.lang.String"/>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band splitType="Stretch"/>
+	</title>
+	<pageHeader>
+		<band height="87" splitType="Stretch">
+			<printWhenExpression><![CDATA[$V{PAGE_NUMBER} == 0]]></printWhenExpression>
+			<image hAlign="Center" vAlign="Middle">
+				<reportElement x="1" y="0" width="169" height="75" uuid="45081100-e55d-4187-8c3e-99b2949aca35"/>
+				<imageExpression><![CDATA[$P{PAHT_ICON}]]></imageExpression>
+			</image>
+			<staticText>
+				<reportElement x="170" y="0" width="303" height="35" uuid="5d46bbc1-1e70-4daa-8e3f-4de81ae6a64b"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="24"/>
+				</textElement>
+				<text><![CDATA[Reporte Torque Tool]]></text>
+			</staticText>
+			<image hAlign="Center" vAlign="Middle">
+				<reportElement x="473" y="0" width="100" height="75" uuid="248881d6-e814-4130-87ec-3860c2443d92"/>
+				<imageExpression><![CDATA[$P{PAHT_ICON}]]></imageExpression>
+			</image>
+			<textField>
+				<reportElement x="170" y="35" width="303" height="25" uuid="b1d4a52d-95fc-4492-a1bd-fbbba0120063"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle" markup="styled">
+					<font size="14"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Nro: <style forecolor='red'>" + $F{nro_reporte} + "</style>"]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="453" y="75" width="80" height="12" uuid="02fd736e-bcf5-4e28-acfa-9adb04ea514a"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Pag "+$V{PAGE_NUMBER}+" de"]]></textFieldExpression>
+			</textField>
+			<textField evaluationTime="Report">
+				<reportElement x="533" y="75" width="40" height="12" uuid="97096eca-823e-42e0-b777-0152c606d49c"/>
+				<textElement verticalAlignment="Middle">
+					<font size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[" " + $V{PAGE_NUMBER}]]></textFieldExpression>
+			</textField>
+		</band>
+	</pageHeader>
+	<columnHeader>
+		<band height="165" splitType="Stretch">
+			<textField pattern="dd/MM/yyyy">
+				<reportElement x="0" y="18" width="143" height="16" uuid="4adc8548-9021-4060-ac14-571c98e51a8f"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="12"/>
+				</textElement>
+				<textFieldExpression><![CDATA[new java.util.Date()]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="0" y="2" width="143" height="16" uuid="4a499e51-b466-40e5-aee1-56ccde2dc986"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="12" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Fecha de reporte:]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="0" y="37" width="259" height="16" uuid="487c07a9-42cf-4db0-8b7d-0b5408dc0b47"/>
+				<textElement textAlignment="Center">
+					<font size="12" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Datos del cliente]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="0" y="53" width="67" height="14" uuid="567dbce2-0ec5-4a76-a1d1-0f9a7b2c86b1"/>
+				<box leftPadding="2" rightPadding="2"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font size="10" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Cliente:]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="0" y="67" width="67" height="14" uuid="3fcc9824-b92b-45ae-a469-f9c3bd925834"/>
+				<box leftPadding="2" rightPadding="2"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font size="10" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Direccion:]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="0" y="81" width="67" height="14" uuid="bcb75a73-76f3-468f-8c74-5745fab4d975"/>
+				<box leftPadding="2" rightPadding="2"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font size="10" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Herramienta:]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="0" y="95" width="67" height="14" uuid="56f0d649-4d03-4aa7-9dcb-f6945800fcf9"/>
+				<box leftPadding="2" rightPadding="2"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font size="10" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Serial:]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="0" y="109" width="67" height="14" uuid="fbef0123-405c-44a2-978b-bbc5e3520fdd"/>
+				<box leftPadding="2" rightPadding="2"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font size="10" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Código:]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="0" y="123" width="67" height="14" uuid="5f26bc6a-fe08-4a08-a199-446182af4aaa"/>
+				<box leftPadding="2" rightPadding="2"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font size="10" isBold="true"/>
+				</textElement>
+				<text><![CDATA[F. Prueba:]]></text>
+			</staticText>
+			<textField>
+				<reportElement x="67" y="53" width="192" height="14" uuid="a80ef736-5535-4003-bdee-c2751dd8fa5b"/>
+				<textElement verticalAlignment="Middle">
+					<font size="10" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{cli_reporte}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="67" y="67" width="192" height="14" uuid="6a31392f-2701-48f6-93db-c8827510f33f"/>
+				<textElement verticalAlignment="Middle">
+					<font size="10" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA["N/A"]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="67" y="81" width="192" height="14" uuid="2f00805b-1a93-44bc-9c48-13e55ab195a4"/>
+				<textElement verticalAlignment="Middle">
+					<font size="10" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{herr_reporte}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="67" y="95" width="192" height="14" uuid="62b5a01e-1a0f-465a-bf2c-ffe139aa3958"/>
+				<textElement verticalAlignment="Middle">
+					<font size="10" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{ser_herr_reporte}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="67" y="109" width="192" height="14" uuid="760b09d3-8804-42c8-8bbe-ddce02add003"/>
+				<textElement verticalAlignment="Middle">
+					<font size="10" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{codigo_herr_reporte}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="67" y="123" width="192" height="14" uuid="d067f7cd-93c5-44c4-a825-fd245f8b49f7"/>
+				<textElement verticalAlignment="Middle">
+					<font size="10" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{fecha_reporte}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="313" y="81" width="75" height="14" uuid="fa2ab820-583f-4416-b241-4d8a319f1dab"/>
+				<box leftPadding="2" rightPadding="2"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font size="10" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Serie:]]></text>
+			</staticText>
+			<textField>
+				<reportElement x="388" y="123" width="184" height="14" uuid="9e4ed11a-289b-4579-96b5-8b2a323c638c"/>
+				<textElement verticalAlignment="Middle">
+					<font size="10" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{op_reporte}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="388" y="95" width="184" height="14" uuid="4fc675e0-e118-4ee7-a0a5-f4eb0738889a"/>
+				<textElement verticalAlignment="Middle">
+					<font size="10" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA["MIS 2022"]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="388" y="81" width="184" height="14" uuid="a39c9207-a25b-4e4b-9c9c-edae3001f876"/>
+				<textElement verticalAlignment="Middle">
+					<font size="10" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA["MIS 001"]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="388" y="53" width="184" height="14" uuid="b419643d-5de0-4691-bda8-93d99fe8dbdb"/>
+				<textElement verticalAlignment="Middle">
+					<font size="10" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Maquina de tarque"]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="313" y="67" width="75" height="14" uuid="c328081d-e91d-4416-b02a-13da2716f0c9"/>
+				<box leftPadding="2" rightPadding="2"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font size="10" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Marca:]]></text>
+			</staticText>
+			<textField>
+				<reportElement x="388" y="67" width="184" height="14" uuid="6f566ffe-234b-41c6-b318-2675563a9747"/>
+				<textElement verticalAlignment="Middle">
+					<font size="10" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Metrology"]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="388" y="109" width="184" height="14" uuid="7a766376-c4c5-4f4f-a068-4c285162f789"/>
+				<textElement verticalAlignment="Middle">
+					<font size="10" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA["2022-01-01"]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="313" y="95" width="75" height="14" uuid="077f3804-9f69-4af8-8dbc-70577a6e3ca6"/>
+				<box leftPadding="2" rightPadding="2"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font size="10" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Modelo:]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="313" y="37" width="259" height="16" uuid="8214c89e-3ef6-4925-b3cf-e96992b43035"/>
+				<textElement textAlignment="Center">
+					<font size="12" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Trazabilidad Metrologica]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="313" y="53" width="75" height="14" uuid="3b3c45cc-145e-49f6-961e-a876f6f8ba07"/>
+				<box leftPadding="2" rightPadding="2"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font size="10" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Equipo:]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="313" y="123" width="75" height="14" uuid="5f4dc363-051a-4957-bc48-bbe870958e56"/>
+				<box leftPadding="2" rightPadding="2"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font size="10" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Operador:]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="313" y="109" width="75" height="14" uuid="ecddf9f9-303b-4e51-a2e1-7192b8a6e0f5"/>
+				<box leftPadding="2" rightPadding="2"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font size="10" isBold="true"/>
+				</textElement>
+				<text><![CDATA[F. Calibracion:]]></text>
+			</staticText>
+			<textField>
+				<reportElement x="67" y="137" width="192" height="14" uuid="d68d5d86-43d8-4a60-91fb-ad701e6b13c8"/>
+				<textElement verticalAlignment="Middle">
+					<font size="10" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{odt_reporte}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="0" y="137" width="67" height="14" uuid="7b89b43a-d29a-471e-bee8-5e180123609d"/>
+				<box leftPadding="2" rightPadding="2"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font size="10" isBold="true"/>
+				</textElement>
+				<text><![CDATA[ODT:]]></text>
+			</staticText>
+		</band>
+	</columnHeader>
+	<detail>
+		<band height="64" splitType="Stretch">
+			<componentElement>
+				<reportElement key="table" style="table" x="16" y="0" width="540" height="60" uuid="4d1523f9-0638-442d-8b49-bc5aecee54ef"/>
+				<jr:table xmlns:jr="http://jasperreports.sourceforge.net/jasperreports/components" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports/components http://jasperreports.sourceforge.net/xsd/components.xsd">
+					<datasetRun subDataset="Table Dataset 1" uuid="c1a37abf-df32-474b-b6ca-915879466671">
+						<datasetParameter name="APRIETE">
+							<datasetParameterExpression><![CDATA[$P{AJUSTE}]]></datasetParameterExpression>
+						</datasetParameter>
+						<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+					</datasetRun>
+					<jr:column width="90" uuid="a7c3c5ed-c992-4d88-af5d-f8a3cad10045">
+						<jr:columnHeader style="table_CH" height="30" rowSpan="1">
+							<staticText>
+								<reportElement x="0" y="0" width="90" height="30" uuid="9521a9a9-dfd6-41ad-928b-06a19ff779cc"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font size="10" isBold="true"/>
+								</textElement>
+								<text><![CDATA[Apriete
+]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell style="table_TD" height="30" rowSpan="1">
+							<textField>
+								<reportElement x="0" y="0" width="90" height="30" uuid="3e4b2600-762e-4263-97bd-ecb4c2ef79e5"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font size="10"/>
+								</textElement>
+								<textFieldExpression><![CDATA[$F{det_apriete}]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+					<jr:column width="90" uuid="7338f7a1-f1e1-44ce-a69c-03f9cbf6259f">
+						<jr:columnHeader style="table_CH" height="30" rowSpan="1">
+							<staticText>
+								<reportElement x="0" y="0" width="90" height="30" uuid="6d660dfe-0810-412a-809a-ffab0cdcf875"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font size="10" isBold="true"/>
+								</textElement>
+								<text><![CDATA[Valor del Apriete
+ft/lb
+]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell style="table_TD" height="30" rowSpan="1">
+							<textField>
+								<reportElement x="0" y="0" width="90" height="30" uuid="cddd80a2-ecc4-410e-bf67-f7a00b6f2464"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font size="10"/>
+								</textElement>
+								<textFieldExpression><![CDATA[$F{det_val_apriete}]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+					<jr:column width="90" uuid="2db752d8-8675-4717-a016-5fb9c524b1c4">
+						<jr:columnHeader style="table_CH" height="30" rowSpan="1">
+							<staticText>
+								<reportElement x="0" y="0" width="90" height="30" uuid="7c828542-c7a4-43e2-b3f6-427cb8936a98"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font size="10" isBold="true"/>
+								</textElement>
+								<text><![CDATA[Valor Aplicado ft/lb]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell style="table_TD" height="30" rowSpan="1">
+							<textField>
+								<reportElement x="0" y="0" width="90" height="30" uuid="b0f8aff1-8f61-437c-9e1b-03c4ebecf824"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font size="10"/>
+								</textElement>
+								<textFieldExpression><![CDATA[$F{det_val_apli_apriete}]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+					<jr:column width="90" uuid="58a9dade-0763-4739-bea9-6a701381764d">
+						<jr:columnHeader style="table_CH" height="30" rowSpan="1">
+							<staticText>
+								<reportElement x="0" y="0" width="90" height="30" uuid="f3c57598-a93b-49a5-b557-c5552fee06a3"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font size="10" isBold="true"/>
+								</textElement>
+								<text><![CDATA[Presicion ]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell style="table_TD" height="30" rowSpan="1">
+							<textField>
+								<reportElement x="0" y="0" width="90" height="30" uuid="22963d23-3c2b-4610-bc2b-00821fcfb716"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font size="10"/>
+								</textElement>
+								<textFieldExpression><![CDATA[String.format("%.2f", ($F{det_val_apli_apriete}.doubleValue() * 100)/$F{det_val_apriete}.doubleValue())]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+					<jr:column width="90" uuid="27a2f2b4-92e2-4bd9-936b-41002ee34d7e">
+						<jr:columnHeader style="table_CH" height="30" rowSpan="1">
+							<staticText>
+								<reportElement x="0" y="0" width="90" height="30" uuid="5d64577e-66cc-4f2b-8ca1-2124c011e696"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font size="10" isBold="true"/>
+								</textElement>
+								<text><![CDATA[Auxiliar 1]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell style="table_TD" height="30" rowSpan="1">
+							<textField>
+								<reportElement x="0" y="0" width="90" height="30" uuid="299349a3-b828-4fdf-a107-c6e5c112834a"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font size="10"/>
+								</textElement>
+								<textFieldExpression><![CDATA[$F{det_auxiliar_1}]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+					<jr:column width="90" uuid="52fc72c4-ee00-43fc-8ef3-516e6c919dd0">
+						<jr:columnHeader style="table_CH" height="30" rowSpan="1">
+							<staticText>
+								<reportElement x="0" y="0" width="90" height="30" uuid="d6445d3c-5233-4204-9f33-d31eac69f9f7"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font size="10" isBold="true"/>
+								</textElement>
+								<text><![CDATA[Auxiliar 2]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell style="table_TD" height="30" rowSpan="1">
+							<textField>
+								<reportElement x="0" y="0" width="90" height="30" uuid="230f97da-cb6c-48ed-8b01-b732b1753095"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font size="10"/>
+								</textElement>
+								<textFieldExpression><![CDATA[$F{det_auxiliar_2}]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+				</jr:table>
+			</componentElement>
+		</band>
+		<band height="257">
+			<image hAlign="Center" vAlign="Middle">
+				<reportElement x="0" y="0" width="572" height="257" uuid="00db5e3b-c3e9-4b6a-ae20-83b24bede83f"/>
+				<imageExpression><![CDATA[$P{PAHT_GRAFICA}]]></imageExpression>
+			</image>
+		</band>
+	</detail>
+	<columnFooter>
+		<band splitType="Stretch"/>
+	</columnFooter>
+	<pageFooter>
+		<band height="60" splitType="Stretch">
+			<staticText>
+				<reportElement x="0" y="0" width="572" height="24" uuid="2b5d002a-5de4-4818-b093-1f603d5b8e71"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="8" isItalic="true"/>
+				</textElement>
+				<text><![CDATA[Los resultados reportados  se refieren exclusivamente a la condición de la herramienta en la fecha de su prueba y no lleva ninguna implicación con respecto a otras pruebas, ni a la  estabilidad de la herramienta  en largos periodos de tiempo.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="0" y="24" width="572" height="12" uuid="71b6bccd-e464-472e-a0de-641895baa625"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="8"/>
+				</textElement>
+				<text><![CDATA[La reproducción de este certificado sólo podrá ser total y depende de la aprobación por escrito del laboratorio de metrología METROLOGY INTEGRATION, S.A.S.
+]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="0" y="36" width="572" height="12" uuid="f3072683-f842-4717-98fc-068bb0d3f776"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="8"/>
+				</textElement>
+				<text><![CDATA[Este reporte solo será valido, si se encuentra el sello de seguridad, en cada una de sus páginas.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="0" y="48" width="572" height="12" uuid="9b181629-abfa-43d5-ba4c-2766fc6e9e24"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="8"/>
+				</textElement>
+				<text><![CDATA[Direcion: Calle 55 Sur # 69A 84, Villa del Rio, Bogota; Web: www.metrology.ws ; Email: metrologia@metrology.ws ; Telefono: 3232910136]]></text>
+			</staticText>
+		</band>
+	</pageFooter>
+</jasperReport>
