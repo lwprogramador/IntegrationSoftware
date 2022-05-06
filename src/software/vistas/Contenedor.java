@@ -1476,8 +1476,11 @@ public class Contenedor extends javax.swing.JFrame {
 
     private void btnAprieteListarClientesMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_btnAprieteListarClientesMouseClicked
         String ClienteSeleccionado = this.contAprietes.listarClientes(null);
-        if (ClienteSeleccionado != null && !ClienteSeleccionado.equals(""))
-            txfAprietesCliente.setText(ClienteSeleccionado);
+        if (ClienteSeleccionado != null && !ClienteSeleccionado.equals("") && !ClienteSeleccionado.equals("SELECCIONE CLIENTE")){            
+            txfAprietesCliente.setText(ClienteSeleccionado.split("\\|")[0].trim());
+            txfAprietesDireccion.setText(ClienteSeleccionado.split("\\|")[1].trim());
+            
+        }
     }//GEN-LAST:event_btnAprieteListarClientesMouseClicked
 
     private void btnAprietesIniciar1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAprietesIniciar1ActionPerformed
