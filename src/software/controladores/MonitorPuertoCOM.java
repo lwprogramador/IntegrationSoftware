@@ -40,25 +40,20 @@ public class MonitorPuertoCOM implements SerialPortDataListener {
     private boolean MEDIDA_ACEPTABLE = false;
     private int ID_APRIETE_HEAD;
 
+    private boolean PAUSA_APRIETE;
+
     private ChartPanel graficaPanel;
     private final TimeSeries linea1;
-    private final TimeSeries linea2;
-    private final TimeSeries auxiliar1;
-    private final TimeSeries auxiliar2;
+
+    private int TEST_VAL = 1;
 
     public MonitorPuertoCOM(CamposActualizar camposActualizar) {
         this.camposActualizar = camposActualizar;
-        this.linea1 = new TimeSeries("Baja", Millisecond.class);
-        this.linea2 = new TimeSeries("Alta", Millisecond.class);
-        this.auxiliar1 = new TimeSeries("Aux 1", Millisecond.class);
-        this.auxiliar2 = new TimeSeries("Aux 2", Millisecond.class);
+        this.linea1 = new TimeSeries("Monitor de apriete", Millisecond.class);
 
         try {
             TimeSeriesCollection dataset = new TimeSeriesCollection();
             dataset.addSeries(this.linea1);
-            dataset.addSeries(this.linea2);
-            dataset.addSeries(this.auxiliar1);
-            dataset.addSeries(this.auxiliar2);
 
             final JFreeChart grafica = crearGrafica(dataset);
             graficaPanel = new ChartPanel(grafica);
@@ -71,9 +66,11 @@ public class MonitorPuertoCOM implements SerialPortDataListener {
             queryEjecutar.setString(1, this.camposActualizar.getOperador().getCodigo());
             queryEjecutar.setString(2, this.camposActualizar.getHerramienta().getCodigo());
             queryEjecutar.setString(3, String.valueOf(this.camposActualizar.getODT().getText()));
-            queryEjecutar.setString(4, String.valueOf(this.camposActualizar.getCliente().getText()));
+            queryEjecutar.setString(4, String.valueOf(this.camposActualizar.getSerie().getText()));
+            queryEjecutar.setString(5, String.valueOf(this.camposActualizar.getCliente().getText()));
+            queryEjecutar.setString(6, String.valueOf(this.camposActualizar.getDireccion().getText()));
+            queryEjecutar.setString(7, String.valueOf(this.camposActualizar.getPatrones().getSelectedItem()).split("\\|")[0].trim());
             this.ID_APRIETE_HEAD = con.guardarAprieteHead(queryEjecutar);
-
         } catch (Exception e) {
             confAplicacion.guardarLogger(this.getClass().toString() + " > MonitorPuertoCOM", e.getMessage(), Arrays.toString(e.getStackTrace()).replace(",", "\n"));
         }
@@ -91,6 +88,14 @@ public class MonitorPuertoCOM implements SerialPortDataListener {
                 return;
             }
 
+            if (this.isPAUSA_APRIETE() == true) {
+                this.camposActualizar.getTblAprietes().setRowSelectionInterval(this.getFilaApriete(), this.getFilaApriete());
+                this.camposActualizar.getLinea1().setBackground(COLOR_ROJO);
+                this.camposActualizar.getTblAprietes().setSelectionBackground(COLOR_ROJO);
+
+                this.TEST_VAL = 0;
+                return;
+            }
             inputBuffer.append(new String(evtPuertoCOM.getReceivedData(), 0, evtPuertoCOM.getReceivedData().length).replaceAll("  ", ""));
             if (!inputBuffer.toString().contains("\n ")) {
                 return;
@@ -103,49 +108,16 @@ public class MonitorPuertoCOM implements SerialPortDataListener {
             System.out.println("Salida Datos: \n" + lineaDatos);
             String[] lineas = lineaDatos.split("\n");
             double linea1 = 0.0;
-            double linea2 = 0.0;
-            double auxiliar1 = 0.0;
-            double auxiliar2 = 0.0;
             DefaultTableModel modeloTablaAprietes = (DefaultTableModel) this.camposActualizar.getTblAprietes().getModel();
-            String tpoApriete = String.valueOf(modeloTablaAprietes.getValueAt(this.getFilaApriete(), 0));
 
             try {
                 String[] lineasData = lineas[0].substring(3).split("; ");
                 try {
-                    if (tpoApriete.equals("BAJA")) {
-                        linea1 = Double.parseDouble(lineasData[1].replaceAll("Fuerza: ", "").replaceAll(" PiesLibras", "").trim());
-                    } else {
-                        linea1 = 0.00;
-                    }
+                    linea1 = Double.parseDouble(lineasData[1].replaceAll("Fuerza: ", "").replaceAll(" PiesLibras", "").trim());
+                    TEST_VAL++;
+                    linea1 = TEST_VAL;
                 } catch (NumberFormatException e) {
                     confAplicacion.guardarLogger(this.getClass().toString(), "linea1 = Double.parseDouble(lineasData[1]) " + e.getMessage(), Arrays.toString(e.getStackTrace()).replace(",", "\n"));
-                }
-
-                lineasData = lineas[1].substring(3).split("; ");
-                try {
-                    if (tpoApriete.equals("ALTA")) {
-                        linea2 = Double.parseDouble(lineasData[1].replaceAll("Fuerza: ", "").replaceAll(" PiesLibras", "").trim());
-                    } else {
-                        linea2 = 0.00;
-                    }
-                } catch (NumberFormatException e) {
-                    confAplicacion.guardarLogger(this.getClass().toString(), "linea1 = Double.parseDouble(lineasData[1]) " + e.getMessage(), Arrays.toString(e.getStackTrace()).replace(",", "\n"));
-                }
-
-                lineasData = lineas[2].substring(3).split("; ");
-                try {
-                    auxiliar1 = Double.parseDouble(lineasData[0].replaceAll("Presion: ", "").replaceAll(" PSI", "").trim());
-                    this.camposActualizar.getAuxiliar1().setText(lineasData[0].replaceAll("Presion: ", ""));
-                } catch (NumberFormatException e) {
-                    confAplicacion.guardarLogger(this.getClass().toString(), "auxiliar1 = Double.parseDouble(lineasData[0]) " + e.getMessage(), Arrays.toString(e.getStackTrace()).replace(",", "\n"));
-                }
-
-                lineasData = lineas[3].substring(3).split("; ");
-                try {
-                    auxiliar2 = Double.parseDouble(lineasData[0].replaceAll("Presion: ", "").replaceAll(" PSI", "").trim());
-                    this.camposActualizar.getAuxiliar2().setText(lineasData[0].replaceAll("Presion: ", ""));
-                } catch (NumberFormatException e) {
-                    confAplicacion.guardarLogger(this.getClass().toString(), "auxiliar2 = Double.parseDouble(lineasData[0]) " + e.getMessage(), Arrays.toString(e.getStackTrace()).replace(",", "\n"));
                 }
             } catch (Exception ex) {
                 confAplicacion.guardarLogger(this.getClass().toString(), "serialEvent - " + ex.getMessage(), Arrays.toString(ex.getStackTrace()).replace(",", "\n"));
@@ -165,33 +137,20 @@ public class MonitorPuertoCOM implements SerialPortDataListener {
                 confAplicacion.guardarLogger(this.getClass().toString(), "aprieteEMPneg = Double.parseDouble(String.valueOf(modeloTablaAprietes.getValueAt(this.getFilaApriete(), 4)).trim())" + e.getMessage(), Arrays.toString(e.getStackTrace()).replace(",", "\n"));
             }
 
-            this.camposActualizar.getTblAprietes().setRowSelectionInterval(this.getFilaApriete(), this.getFilaApriete());
-            if (tpoApriete.equals("ALTA")) {
-                modeloTablaAprietes.setValueAt(String.format("%.5f", linea2).replaceAll(",", "."), this.getFilaApriete(), 5);
-                if (linea2 < aprieteEMPneg || linea2 > aprieteEMPpos) {
-                    this.camposActualizar.getLinea2().setBackground(COLOR_ROJO);
-                    this.camposActualizar.getTblAprietes().setSelectionBackground(COLOR_ROJO);
-                    this.MEDIDA_ACEPTABLE = false;
-                } else {
-                    this.camposActualizar.getLinea2().setBackground(COLOR_VERDE);
-                    this.camposActualizar.getTblAprietes().setSelectionBackground(COLOR_VERDE);
-                    this.MEDIDA_ACEPTABLE = true;
-                }
+            modeloTablaAprietes.setValueAt(String.format("%.5f", linea1).replaceAll(",", "."), this.getFilaApriete(), 5);
+            System.out.println("MEDIDAS: " + linea1 + "; " + aprieteEMPneg + "; " + linea1 + "; " + aprieteEMPpos);
+            if (linea1 < aprieteEMPneg || linea1 > aprieteEMPpos) {
+                this.camposActualizar.getLinea1().setBackground(COLOR_ROJO);
+                this.camposActualizar.getTblAprietes().setSelectionBackground(COLOR_ROJO);
+                this.MEDIDA_ACEPTABLE = false;
             } else {
-                modeloTablaAprietes.setValueAt(String.format("%.5f", linea1).replaceAll(",", "."), this.getFilaApriete(), 5);
-                if (linea1 < aprieteEMPneg || linea1 > aprieteEMPpos) {
-                    this.camposActualizar.getLinea1().setBackground(COLOR_ROJO);
-                    this.camposActualizar.getTblAprietes().setSelectionBackground(COLOR_ROJO);
-                    this.MEDIDA_ACEPTABLE = false;
-                } else {
-                    this.camposActualizar.getLinea1().setBackground(COLOR_VERDE);
-                    this.camposActualizar.getTblAprietes().setSelectionBackground(COLOR_VERDE);
-                    this.MEDIDA_ACEPTABLE = true;
-                }
+                this.camposActualizar.getLinea1().setBackground(COLOR_VERDE);
+                this.camposActualizar.getTblAprietes().setSelectionBackground(COLOR_VERDE);
+                this.MEDIDA_ACEPTABLE = true;
             }
+            this.camposActualizar.getTblAprietes().setRowSelectionInterval(this.getFilaApriete(), this.getFilaApriete());
             this.camposActualizar.getLinea1().setText(String.format("%.3f", linea1).replaceAll(",", ".") + " PiesLibras");
-            this.camposActualizar.getLinea2().setText(String.format("%.3f", linea2).replaceAll(",", ".") + " PiesLibras");
-            actualizarGrafica(linea1, linea2, auxiliar1, auxiliar2);
+            actualizarGrafica(linea1, 0.0, 0.0, 0.0);
         } catch (Exception e) {
             e.printStackTrace();
             confAplicacion.guardarLogger(this.getClass().toString(), "serialEvent - " + e.getMessage(), Arrays.toString(e.getStackTrace()).replace(",", "\n"));
@@ -205,11 +164,14 @@ public class MonitorPuertoCOM implements SerialPortDataListener {
 
         this.camposActualizar.getCliente().setText("");
         this.camposActualizar.getODT().setText("");
+        this.camposActualizar.getSerie().setText("");
         this.camposActualizar.getLinea1().setText(String.format("%.2f", 0.0).replaceAll(",", ".") + " PiesLibras");
-        this.camposActualizar.getLinea2().setText(String.format("%.2f", 0.0).replaceAll(",", ".") + " PiesLibras");
+        /*this.camposActualizar.getLinea2().setText(String.format("%.2f", 0.0).replaceAll(",", ".") + " PiesLibras");
         this.camposActualizar.getAuxiliar1().setText(String.format("%.3f", 0.0).replaceAll(",", ".") + " PSI");
-        this.camposActualizar.getAuxiliar2().setText(String.format("%.3f", 0.0).replaceAll(",", ".") + " PSI");
+        this.camposActualizar.getAuxiliar2().setText(String.format("%.3f", 0.0).replaceAll(",", ".") + " PSI");*/
         this.camposActualizar.getHerramientas().setSelectedIndex(0);
+        this.camposActualizar.getDireccion().setText("");
+        this.camposActualizar.getPatrones().setSelectedIndex(0);
         this.camposActualizar.getPanelGrafica().remove(this.graficaPanel);
         this.camposActualizar.getPanelGrafica().revalidate();
         this.camposActualizar.getPanelGrafica().repaint();
@@ -229,9 +191,6 @@ public class MonitorPuertoCOM implements SerialPortDataListener {
     public void actualizarGrafica(double linea1, double linea2, double auxiliar1, double auxiliar2) {
         final Millisecond now = new Millisecond();
         this.linea1.add(new Millisecond(), linea1);
-        this.linea2.add(new Millisecond(), linea2);
-        this.auxiliar1.add(new Millisecond(), auxiliar1);
-        this.auxiliar2.add(new Millisecond(), auxiliar2);
         try {
             PreparedStatement queryEjecutar = con.prepararQuery(this.PROP_SISTEMA.getProperty("sql.guardarlogdet"));
             queryEjecutar.setInt(1, this.ID_APRIETE_HEAD);
@@ -252,6 +211,17 @@ public class MonitorPuertoCOM implements SerialPortDataListener {
         }
     }
 
+    public void eliminarAprieteActual() {
+        try {
+            PreparedStatement queryEjecutar = con.prepararQuery(this.PROP_SISTEMA.getProperty("sql.eliminaraprietelog"));
+            queryEjecutar.setInt(1, this.ID_APRIETE_HEAD);
+            queryEjecutar.setInt(2, this.ID_APRIETE_HEAD);
+            queryEjecutar.executeUpdate();
+        } catch (Exception e) {
+            confAplicacion.guardarLogger(this.getClass().toString() + " > MonitorPuertoCOM", e.getMessage(), Arrays.toString(e.getStackTrace()).replace(",", "\n"));
+        }
+    }
+
     public int setFilaApriete(int FILA_APRIETE) {
         if (this.MEDIDA_ACEPTABLE == false) {
             return -1;
@@ -268,5 +238,22 @@ public class MonitorPuertoCOM implements SerialPortDataListener {
 
     public int getFilaApriete() {
         return this.FILA_APRIETE;
+    }
+
+    /**
+     * @return the PAUSA_APRIETE
+     */
+    public boolean isPAUSA_APRIETE() {
+        return PAUSA_APRIETE;
+    }
+
+    /**
+     * @param PAUSA_APRIETE the PAUSA_APRIETE to set
+     */
+    public void setPAUSA_APRIETE(boolean PAUSA_APRIETE) {
+        this.PAUSA_APRIETE = PAUSA_APRIETE;
+        if (PAUSA_APRIETE == true) {
+            this.actualizarGrafica(0.0, 0.0, 0.0, 0.0);
+        }
     }
 }

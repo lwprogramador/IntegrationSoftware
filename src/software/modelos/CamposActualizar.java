@@ -16,6 +16,48 @@ import javax.swing.JTextField;
 public class CamposActualizar {
 
     /**
+     * @return the Serie
+     */
+    public JTextField getSerie() {
+        return Serie;
+    }
+
+    /**
+     * @param Serie the Serie to set
+     */
+    public void setSerie(JTextField Serie) {
+        this.Serie = Serie;
+    }
+
+    /**
+     * @return the Direccion
+     */
+    public JTextField getDireccion() {
+        return Direccion;
+    }
+
+    /**
+     * @param Direccion the Direccion to set
+     */
+    public void setDireccion(JTextField Direccion) {
+        this.Direccion = Direccion;
+    }
+
+    /**
+     * @return the Patrones
+     */
+    public JComboBox getPatrones() {
+        return Patrones;
+    }
+
+    /**
+     * @param Patrones the Patrones to set
+     */
+    public void setPatrones(JComboBox Patrones) {
+        this.Patrones = Patrones;
+    }
+
+    /**
      * @return the herramienta
      */
     public Herramienta getHerramienta() {
@@ -193,7 +235,10 @@ public class CamposActualizar {
     private JTextField Auxiliar2;
 
     private JTextField ODT;
+    private JTextField Serie;
     private JTextField Cliente;
+    private JTextField Direccion;
     private JComboBox Herramientas;
+    private JComboBox Patrones;
     private JTable tblAprietes;
 }

@@ -26,6 +26,9 @@ public class Login extends javax.swing.JFrame {
         initComponents();
         this.confApp.cargarFrameActivo(this);
         this.confApp.cargarTituloAplicacionLogin();
+        
+        txfUsuario.setText("ADMIN");
+        txfClave.setText("Integration2021");
     }
 
     /**

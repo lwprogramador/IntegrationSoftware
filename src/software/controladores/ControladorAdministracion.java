@@ -6,6 +6,7 @@ package software.controladores;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import java.awt.Font;
 import java.awt.HeadlessException;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
@@ -13,8 +14,11 @@ import java.awt.event.ActionListener;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Properties;
@@ -22,6 +26,7 @@ import java.util.Vector;
 import javax.swing.ImageIcon;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
+import javax.swing.JFormattedTextField;
 import javax.swing.JLabel;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
@@ -31,6 +36,7 @@ import javax.swing.JTextField;
 import javax.swing.table.DefaultTableModel;
 import software.modelos.Herramienta;
 import software.modelos.HerramientaAprietes;
+import software.modelos.Patrones;
 import software.modelos.Usuario;
 
 /**
@@ -258,7 +264,7 @@ public class ControladorAdministracion {
             serialHerramienta.setText("");
 
             medidaHerramienta.setText(String.format("%.5f", 0.0).replaceAll(",", "."));
-            diasFueraHerramienta.setText("0");
+            diasFueraHerramienta.setText(String.format("%.5f", 0.0).replaceAll(",", "."));
             districtoHerramienta.setText("");
             tpoReporte.setSelectedIndex(0);
             DefaultTableModel modeloTbl = (DefaultTableModel) tblAprietes.getModel();
@@ -313,6 +319,8 @@ public class ControladorAdministracion {
             modeloTabla.setModel(model);
             modeloTabla.setPreferredScrollableViewportSize(modeloTabla.getPreferredSize());
 
+            modeloTabla.setFont(new Font("", Font.PLAIN, 16));
+            
             modeloTabla.setComponentPopupMenu(this.agregarMenusTablaHerramientas());
 
             this.ADMIN_HERRAMIENTAS_APRIETES = modeloTabla;
@@ -415,7 +423,7 @@ public class ControladorAdministracion {
             int iFila = this.getFilaAprietes();
             String nombreApriete = String.valueOf(modelAprietes.getValueAt(iFila, 1));
             String medidaExacta = String.valueOf(modelAprietes.getValueAt(iFila, 2));
-            String porcentajeEMP = String.valueOf(modelAprietes.getValueAt(iFila, 3));
+            String valorEMP = String.valueOf(modelAprietes.getValueAt(iFila, 3));
 
             double medida = 0.0;
             double porcMedida = 0.0;
@@ -428,9 +436,8 @@ public class ControladorAdministracion {
             } catch (NumberFormatException e) {
                 confAplicacion.guardarLogger(this.getClass().toString() + " > medida = Double.parseDouble(medidaExacta)", e.getMessage(), Arrays.toString(e.getStackTrace()).replace(",", "\n"));
             }
-            try {
-                porcMedida = Double.parseDouble(porcentajeEMP);
-                porcMedidaValor = (porcMedida * medida) / 100;
+            try {                
+                porcMedidaValor = Double.parseDouble(valorEMP);
             } catch (NumberFormatException e) {
                 confAplicacion.guardarLogger(this.getClass().toString() + " > porcMedida = Double.parseDouble(porcentajeEMP)", e.getMessage(), Arrays.toString(e.getStackTrace()).replace(",", "\n"));
             }
@@ -445,12 +452,12 @@ public class ControladorAdministracion {
                 confAplicacion.guardarLogger(this.getClass().toString() + " > empNeg = Double.parseDouble(empNegativo)", e.getMessage(), Arrays.toString(e.getStackTrace()).replace(",", "\n"));
             }
             modelAprietes.setValueAt(String.format("%.5f", medida).replaceAll(",", "."), iFila, 2);
-            modelAprietes.setValueAt(String.format("%.5f", porcMedida).replaceAll(",", "."), iFila, 3);
-            modelAprietes.setValueAt(String.format("%.5f", empNeg).replaceAll(",", "."), iFila, 4);
-            modelAprietes.setValueAt(String.format("%.5f", empPos).replaceAll(",", "."), iFila, 5);
+            modelAprietes.setValueAt(String.format("%.5f", porcMedidaValor).replaceAll(",", "."), iFila, 3);
+            modelAprietes.setValueAt(String.format("%.5f", empPos).replaceAll(",", "."), iFila, 4);
+            modelAprietes.setValueAt(String.format("%.5f", empNeg).replaceAll(",", "."), iFila, 5);
+            
             confAplicacion.guardarLogger(this.getClass().toString() + " > actualizarCalculosAprietes", "Actualizado campos aprietes");
         } catch (Exception e) {
-            e.printStackTrace();
             confAplicacion.guardarLogger(this.getClass().toString() + " > actualizarCalculosAprietes", e.getMessage(), Arrays.toString(e.getStackTrace()).replace(",", "\n"));
         }
     }
@@ -614,6 +621,137 @@ public class ControladorAdministracion {
         return herrameintas;
     }
 
+    /**
+     * *****************Modulo de administracion
+     * patron********************************************************************************************************
+     */
+    
+    public void limpiarCamposAdminPatron(JLabel codPatron, JTextField nombEquipoPatron, JTextField marcaPatron, JTextField modeloPatron, JTextField seriePatron, JTextField fechaCalibPatron) {
+        try {
+            codPatron.setText("");
+            nombEquipoPatron.setText("");
+            marcaPatron.setText("");
+            modeloPatron.setText("");
+            seriePatron.setText("");
+            fechaCalibPatron.setText("");
+        } catch (Exception e) {
+            confAplicacion.guardarLogger(this.getClass().toString() + " > limpiarCamposAdminPatron", e.getMessage(), Arrays.toString(e.getStackTrace()).replace(",", "\n"));
+        }
+    }
+
+    public ArrayList<Patrones> cargarPatrones(JTable tablaPatrones){
+        ArrayList<Patrones> herrameintas = new ArrayList<Patrones>();
+        try {
+            ConexionBD con = new ConexionBD();
+            PreparedStatement queryEjecutar = con.prepararQuery(PROP_SISTEMA.getProperty("sql.tablapatrones"));
+            herrameintas = con.obtenerPatrones(queryEjecutar);
+            DefaultTableModel modeloPatrones = (DefaultTableModel) tablaPatrones.getModel();
+            if (herrameintas == null || herrameintas.isEmpty()) {
+                return herrameintas;
+            }
+            modeloPatrones.setRowCount(0);
+            for (Patrones item : herrameintas) {
+                Vector vItem = new Vector();
+                vItem.add(item.getCodigo());
+                vItem.add(item.getNombre());
+                vItem.add(item.getMarca() + " - " + item.getModelo());
+                vItem.add(item.getSerie());
+                vItem.add(item.isActivo());
+
+                modeloPatrones.addRow(vItem);
+            }
+        } catch (Exception e) {
+            confAplicacion.guardarLogger(this.getClass().toString() + " > cargarPatrones", e.getMessage(), Arrays.toString(e.getStackTrace()).replace(",", "\n"));
+        }
+        return herrameintas;
+    }
+        
+    public ArrayList<Patrones> guardarPatron(JLabel codPatron, JTextField nombEquipoPatron, JTextField marcaPatron, JTextField modeloPatron, JTextField seriePatron, JTextField fechaCalibPatron, JTable tblAdminPatrones) {
+        ArrayList<Patrones> listaPatrones = null;
+        SimpleDateFormat format = new SimpleDateFormat("yyyy/MM/dd");
+        try {
+            if (String.valueOf(nombEquipoPatron.getText()).trim().equals("")) {
+                JOptionPane.showMessageDialog(null, ControladorAdministracion.PROP_SISTEMA.getProperty("mensaje.validacionnombrequipopatron"), "Error de validación para registro", JOptionPane.WARNING_MESSAGE);
+                return listaPatrones;
+            }
+            if (String.valueOf(marcaPatron.getText()).trim().equals("")) {
+                JOptionPane.showMessageDialog(null, ControladorAdministracion.PROP_SISTEMA.getProperty("mensaje.validacionmarcapatron"), "Error de validación para registro", JOptionPane.WARNING_MESSAGE);
+                return listaPatrones;
+            }
+            if (String.valueOf(modeloPatron.getText()).trim().equals("")) {
+                JOptionPane.showMessageDialog(null, ControladorAdministracion.PROP_SISTEMA.getProperty("mensaje.validacionmodelopatron"), "Error de validación para registro", JOptionPane.WARNING_MESSAGE);
+                return listaPatrones;
+            }
+            if (String.valueOf(seriePatron.getText()).trim().equals("")) {
+                JOptionPane.showMessageDialog(null, ControladorAdministracion.PROP_SISTEMA.getProperty("mensaje.validacionseriepatron"), "Error de validación para registro", JOptionPane.WARNING_MESSAGE);
+                return listaPatrones;
+            }
+            Date calDate;
+            try {
+                calDate = format.parse(fechaCalibPatron.getText());
+            } catch (ParseException e) {
+                calDate = null;
+            }            
+            if (String.valueOf(fechaCalibPatron.getText()).trim().equals("") || calDate == null) {
+                JOptionPane.showMessageDialog(null, ControladorAdministracion.PROP_SISTEMA.getProperty("mensaje.validacionfechacalpatron"), "Error de validación para registro", JOptionPane.WARNING_MESSAGE);
+                return listaPatrones;
+            }
+            
+            String codigoPatron = String.valueOf(codPatron.getText());
+            ConexionBD con = new ConexionBD();
+            PreparedStatement queryEjecutar;
+            if(codigoPatron != null && !codigoPatron.isEmpty() && !codigoPatron.isBlank()){
+                queryEjecutar = con.prepararQuery(PROP_SISTEMA.getProperty("sql.actualizarpatron"));
+                queryEjecutar.setString(6, codigoPatron);                
+            }else{
+                queryEjecutar = con.prepararQuery(PROP_SISTEMA.getProperty("sql.guardarpatron"));
+            }
+            
+            queryEjecutar.setString(1, String.valueOf(nombEquipoPatron.getText()).trim());
+            queryEjecutar.setString(2, String.valueOf(marcaPatron.getText()).trim());
+            queryEjecutar.setString(3, String.valueOf(modeloPatron.getText()).trim());
+            queryEjecutar.setString(4, String.valueOf(seriePatron.getText()).trim());
+            queryEjecutar.setString(5, String.valueOf(fechaCalibPatron.getText()).trim());
+            
+            String patronGuardado = con.guardarPatron(queryEjecutar);
+            if(patronGuardado != null){                
+                JOptionPane.showMessageDialog(null, "Los datos ha sido guardados", "DATOS GUARDADOS", JOptionPane.INFORMATION_MESSAGE);
+            }else{
+                JOptionPane.showMessageDialog(null, "Los datos NO han sido guardados", "DATOS NO GUARDADOS", JOptionPane.INFORMATION_MESSAGE);
+            }
+            
+            listaPatrones = cargarPatrones(tblAdminPatrones);
+        } catch (Exception e) {
+            confAplicacion.guardarLogger(this.getClass().toString() + " > guardarOperador", e.getMessage(), Arrays.toString(e.getStackTrace()).replace(",", "\n"));
+        }
+        return listaPatrones;
+    }
+    
+    public ArrayList<Patrones> seleccionarPatron(JLabel codPatron, JTextField nombEquipoPatron, JTextField marcaPatron, JTextField modeloPatron, JTextField seriePatron, JTextField fechaCalibPatron, JTable tblAdminPatrones, Patrones itempatron) {
+        ArrayList<Patrones> patrones = new ArrayList<>();
+        try {
+            if (tblAdminPatrones.getSelectedColumn() == 4) {
+                DefaultTableModel modelTblHerramientas = (DefaultTableModel) tblAdminPatrones.getModel();
+                ConexionBD con = new ConexionBD();
+                PreparedStatement queryEjecutar = con.prepararQuery(PROP_SISTEMA.getProperty("sql.estadoherramientas"));
+                queryEjecutar.setBoolean(1, (boolean) modelTblHerramientas.getValueAt(tblAdminPatrones.getSelectedRow(), 4));
+                queryEjecutar.setString(2, (String) modelTblHerramientas.getValueAt(tblAdminPatrones.getSelectedRow(), 0));
+                queryEjecutar.execute();                
+            } else {
+                codPatron.setText(itempatron.getCodigo());
+                nombEquipoPatron.setText(itempatron.getNombre());
+                marcaPatron.setText(itempatron.getMarca());
+                modeloPatron.setText(itempatron.getModelo());
+                seriePatron.setText(itempatron.getSerie());
+                fechaCalibPatron.setText(itempatron.getFechaCal());
+            }
+            
+            patrones = cargarPatrones(tblAdminPatrones);
+        } catch (Exception e) {
+            confAplicacion.guardarLogger(this.getClass().toString() + " > seleccionarHerramienta", e.getMessage(), Arrays.toString(e.getStackTrace()).replace(",", "\n"));
+        }
+        return patrones;
+    }
     /**
      * @return the FILA_ADMIN_HERRAMIENTAS_APRIETES_SELECCIONADO
      */

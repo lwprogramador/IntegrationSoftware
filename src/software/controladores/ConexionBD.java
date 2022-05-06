@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Vector;
 import software.modelos.ConsultaAprietes;
 import software.modelos.Herramienta;
+import software.modelos.Patrones;
 import software.modelos.Usuario;
 
 /**
@@ -72,6 +73,16 @@ public class ConexionBD {
         return query;
     }
 
+    public void actualizarContador(String contador) {  
+        PreparedStatement query = null;
+        try {
+            query = conexionSQL.prepareStatement("UPDATE tbl_contadores SET " + contador + " = " + contador + " + 1");
+            query.executeQuery();
+        } catch (SQLException ex) {
+            confAplicacion.guardarLogger(this.getClass().toString() + " > actualizarContador", query.toString() + confAplicacion.SISTEMA_SALTO_LINEA + ex.getMessage(), Arrays.toString(ex.getStackTrace()).replace(",", "\n"));
+        }
+    }
+    
     public Usuario realizarLoginUsuario(PreparedStatement queryEjecutar) {
         Usuario retUsr = null;
         try {
@@ -98,6 +109,9 @@ public class ConexionBD {
                     Gson gson = new Gson();
                     retUsr = gson.fromJson(new StringReader(resultSet.getString(1)), Usuario.class);
                     confAplicacion.guardarLogger(this.getClass().toString() + " > realizarLoginUsuario", "SE EJECUTO EL QUERY " + confAplicacion.SISTEMA_SALTO_LINEA + queryEjecutar.toString() + "", "");
+                    if(queryEjecutar.toString().startsWith("INSERT INTO")){
+                        actualizarContador("cont_operador");
+                    }
                 }
             }
         } catch (Exception ex) {
@@ -116,6 +130,9 @@ public class ConexionBD {
                     queryEjecutar = conexionSQL.prepareStatement(this.PROP_SISTEMA.getProperty("sql.eliminaraprietes"));
                     queryEjecutar.setInt(1, herrID);
                     queryEjecutar.execute();
+                    if(queryEjecutar.toString().startsWith("INSERT INTO")){
+                        actualizarContador("cont_herramienta");
+                    }
                 }
             }
         } catch (SQLException ex) {
@@ -170,6 +187,39 @@ public class ConexionBD {
         return aprieteHead;
     }
 
+    public String guardarPatron(PreparedStatement queryEjecutar) {
+        String aprietePatron = null;
+        try {
+            ResultSet resultSet = queryEjecutar.executeQuery();
+            if (resultSet != null) {
+                if (resultSet.next()) {
+                    aprietePatron = resultSet.getString(1);
+                    if(queryEjecutar.toString().startsWith("INSERT INTO")){
+                        actualizarContador("cont_patron");
+                    }
+                }
+            }
+        } catch (Exception e) {
+            confAplicacion.guardarLogger(this.getClass().toString() + " > guardarPatron", queryEjecutar.toString() + confAplicacion.SISTEMA_SALTO_LINEA + e.getMessage(), Arrays.toString(e.getStackTrace()).replace(",", "\n"));
+        }
+        return aprietePatron;
+    }
+    
+    public ArrayList<Patrones> obtenerPatrones(PreparedStatement queryEjecutar) {
+        ArrayList<Patrones> herramientas = new ArrayList<>();
+        try {
+            ResultSet resultSet = queryEjecutar.executeQuery();
+            if (resultSet != null) {
+                if (resultSet.next()) {
+                    herramientas = new Gson().fromJson(resultSet.getString(1), new TypeToken<List<Patrones>>() {
+                    }.getType());
+                }
+            }
+        } catch (SQLException ex) {
+            confAplicacion.guardarLogger(this.getClass().toString() + " > obtenerPatrones", queryEjecutar.toString() + confAplicacion.SISTEMA_SALTO_LINEA + ex.getMessage(), Arrays.toString(ex.getStackTrace()).replace(",", "\n"));
+        }
+        return herramientas;
+    }
     public ArrayList<String> listarClientes(PreparedStatement queryEjecutar) {
         ArrayList<String> aprieteHead = new ArrayList<>();
         try {
@@ -200,4 +250,6 @@ public class ConexionBD {
         }
         return aprieteResultados;
     }
+    
+    
 }

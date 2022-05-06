@@ -47,6 +47,7 @@ import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
 import software.modelos.CamposActualizar;
 import software.modelos.Herramienta;
+import software.modelos.Patrones;
 import software.modelos.Usuario;
 
 /**
@@ -65,7 +66,9 @@ public class confAplicacion {
     private Herramienta HERRAMIENTA_ACTIVA;
     private ArrayList<Usuario> LISTA_OPERADORES;
     private ArrayList<Herramienta> HERRAMIENTAS;
+    private ArrayList<Patrones> PATRONES;
     private boolean REALIZANDO_APRIETE;
+
     private SerialPort PUERTO_COM;
     MonitorPuertoCOM monitorCOM;
     HiloReloj monitorReloj;
@@ -242,7 +245,7 @@ public class confAplicacion {
                 System.exit(0);
             }
             if (!this.getDatosUsuario().isAdmin()) {
-                //menuAdmin.disable();
+                menuAdmin.setVisible(false);
             }
         } catch (Exception e) {
             confAplicacion.guardarLogger(this.getClass().toString() + " > limpiarCamposAdminOperador", e.getMessage(), Arrays.toString(e.getStackTrace()).replace(",", "\n"));
@@ -321,6 +324,7 @@ public class confAplicacion {
                 JOptionPane.showMessageDialog(null, "No se puede avanzar al siguiente apriete, la medidacion debe estar dentro los rangos permitidos", "ERROR EN APRIETES", JOptionPane.ERROR_MESSAGE);
                 break;
             default:
+                this.monitorCOM.setPAUSA_APRIETE(true);
                 break;
         }
     }
@@ -328,6 +332,11 @@ public class confAplicacion {
     public boolean activarPuertoCOM(CamposActualizar camposActualizar) {
         boolean puertoAbierto = false;
         try {
+            if (this.isRealizandoApriete() == true) {
+                this.monitorCOM.setPAUSA_APRIETE(false);
+                return true;
+            }
+
             Properties propSistema = new Properties();
             InputStream inputSteam = new FileInputStream(new File("." + SISTEMA_SEPARADOR_RUTA + "recursos" + SISTEMA_SEPARADOR_RUTA + "confAplicacion.properties"));
             propSistema.load(inputSteam);
@@ -378,6 +387,23 @@ public class confAplicacion {
             this.PUERTO_COM.closePort();
             this.monitorReloj.detenerReloj();
             this.setRealizandoApriete(false);
+        } catch (Exception e) {
+            confAplicacion.guardarLogger(this.getClass().toString() + " > desactivarPuertoCOM", e.getMessage(), Arrays.toString(e.getStackTrace()).replace(",", "\n"));
+        }
+    }
+
+    public void detenerAprietes() {
+        try {
+            int confCerrar = JOptionPane.showConfirmDialog(null, "Si detiene la toma de datos se perdera toda la información tomada hast ahora. ¿Esta seguro que desea finalizar los aprietes?", "Finalizar apriete", JOptionPane.YES_NO_OPTION);
+            if (confCerrar == 0) {
+                this.PUERTO_COM.removeDataListener();
+                this.PUERTO_COM.closePort();
+                this.monitorReloj.detenerReloj();
+                this.setRealizandoApriete(false);
+                this.monitorCOM.limpiarCamposAprietes();
+                this.monitorCOM.eliminarAprieteActual();
+            }
+
         } catch (Exception e) {
             confAplicacion.guardarLogger(this.getClass().toString() + " > desactivarPuertoCOM", e.getMessage(), Arrays.toString(e.getStackTrace()).replace(",", "\n"));
         }
@@ -473,5 +499,19 @@ public class confAplicacion {
 
     public void setDatosUsuario(Usuario datosUsuario) {
         this.datosUsuario = datosUsuario;
+    }
+
+    /**
+     * @return the PATRONES
+     */
+    public ArrayList<Patrones> getPatrones() {
+        return PATRONES;
+    }
+
+    /**
+     * @param PATRONES the PATRONES to set
+     */
+    public void setPatrones(ArrayList<Patrones> PATRONES) {
+        this.PATRONES = PATRONES;
     }
 }

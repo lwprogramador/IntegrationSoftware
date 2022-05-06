@@ -46,27 +46,6 @@ ald.idaprietelog  = $P{APRIETE}::integer ORDER BY ald.tx_apriete ASC]]>
 		<field name="det_auxiliar_1" class="java.math.BigDecimal"/>
 		<field name="det_auxiliar_2" class="java.math.BigDecimal"/>
 	</subDataset>
-	<subDataset name="New Dataset 1" uuid="e721a19d-fa0f-4682-af89-b59e223917bd">
-		<queryString language="SQL">
-			<![CDATA[SELECT DISTINCT
-ald.tx_apriete as det_apriete,
-(SELECT iald.num_val_apriete AS det_val_apriete FROM herramientas.tbl_aprietes_logs_detalle AS iald WHERE iald.idaprietelog = ald.idaprietelog AND iald.tx_apriete = ald.tx_apriete ORDER BY iald.fecha DESC LIMIT 1),
-(SELECT CASE WHEN iald.tx_condicion = 'ALTA' THEN iald.linea2 ELSE iald.linea1 END AS det_val_apli_apriete FROM herramientas.tbl_aprietes_logs_detalle AS iald WHERE iald.idaprietelog = ald.idaprietelog AND iald.tx_apriete = ald.tx_apriete ORDER BY iald.fecha DESC LIMIT 1),
-(SELECT iald.auxiliar1 AS det_auxiliar_1 FROM herramientas.tbl_aprietes_logs_detalle AS iald WHERE iald.idaprietelog = ald.idaprietelog AND iald.tx_apriete = ald.tx_apriete ORDER BY iald.fecha DESC LIMIT 1),
-(SELECT iald.auxiliar2 AS det_auxiliar_2 FROM herramientas.tbl_aprietes_logs_detalle AS iald WHERE iald.idaprietelog = ald.idaprietelog AND iald.tx_apriete = ald.tx_apriete ORDER BY iald.fecha DESC LIMIT 1)
-FROM
-herramientas.tbl_aprietes_logs_detalle ald
-
-WHERE
-ald.idaprietelog = 18
-ORDER BY ald.tx_apriete ASC]]>
-		</queryString>
-		<field name="det_apriete" class="java.lang.String"/>
-		<field name="det_val_apriete" class="java.math.BigDecimal"/>
-		<field name="det_val_apli_apriete" class="java.math.BigDecimal"/>
-		<field name="det_auxiliar_1" class="java.math.BigDecimal"/>
-		<field name="det_auxiliar_2" class="java.math.BigDecimal"/>
-	</subDataset>
 	<parameter name="PAHT_ICON" class="java.lang.String"/>
 	<parameter name="AJUSTE" class="java.lang.String"/>
 	<parameter name="PAHT_GRAFICA" class="java.lang.String"/>
@@ -79,12 +58,18 @@ h.tx_nombre AS herr_reporte,
 h.tx_serial AS ser_herr_reporte,
 to_char(al.fecha, 'dd/MM/YYYY') as fecha_reporte,
 al.odt AS odt_reporte,
-CONCAT(o.tx_nombre, ' ', o.tx_apellido) as op_reporte
+CONCAT(o.tx_nombre, ' ', o.tx_apellido) as op_reporte,
+p.tx_nombre as patron_equipo,
+p.tx_marca as patron_marca,
+p.tx_modelo as patron_modelo,
+p.tx_serie as patron_serie,
+p.fe_ultima_calibracion as patron_fechacal
 
 from
 herramientas.tbl_aprietes_logs AS al
 INNER JOIN herramientas.tbl_herramientas AS h ON al.idherramienta = h.id
 INNER JOIN entidades.tbl_operador AS o ON o.id = al.idoperador
+inner join entidades.tbl_patron  as p on p.id = al.patron
 
 where al.id = $P{AJUSTE}::integer]]>
 	</queryString>
@@ -96,6 +81,11 @@ where al.id = $P{AJUSTE}::integer]]>
 	<field name="fecha_reporte" class="java.lang.String"/>
 	<field name="odt_reporte" class="java.lang.String"/>
 	<field name="op_reporte" class="java.lang.String"/>
+	<field name="patron_equipo" class="java.lang.String"/>
+	<field name="patron_marca" class="java.lang.String"/>
+	<field name="patron_modelo" class="java.lang.String"/>
+	<field name="patron_serie" class="java.lang.String"/>
+	<field name="patron_fechacal" class="java.lang.String"/>
 	<background>
 		<band splitType="Stretch"/>
 	</background>
@@ -276,21 +266,21 @@ where al.id = $P{AJUSTE}::integer]]>
 				<textElement verticalAlignment="Middle">
 					<font size="10" isBold="false"/>
 				</textElement>
-				<textFieldExpression><![CDATA["MIS 2022"]]></textFieldExpression>
+				<textFieldExpression><![CDATA[$F{patron_modelo}]]></textFieldExpression>
 			</textField>
 			<textField>
 				<reportElement x="388" y="81" width="184" height="14" uuid="a39c9207-a25b-4e4b-9c9c-edae3001f876"/>
 				<textElement verticalAlignment="Middle">
 					<font size="10" isBold="false"/>
 				</textElement>
-				<textFieldExpression><![CDATA["MIS 001"]]></textFieldExpression>
+				<textFieldExpression><![CDATA[$F{patron_serie}]]></textFieldExpression>
 			</textField>
 			<textField>
 				<reportElement x="388" y="53" width="184" height="14" uuid="b419643d-5de0-4691-bda8-93d99fe8dbdb"/>
 				<textElement verticalAlignment="Middle">
 					<font size="10" isBold="false"/>
 				</textElement>
-				<textFieldExpression><![CDATA["Maquina de tarque"]]></textFieldExpression>
+				<textFieldExpression><![CDATA[$F{patron_equipo}]]></textFieldExpression>
 			</textField>
 			<staticText>
 				<reportElement x="313" y="67" width="75" height="14" uuid="c328081d-e91d-4416-b02a-13da2716f0c9"/>
@@ -305,14 +295,14 @@ where al.id = $P{AJUSTE}::integer]]>
 				<textElement verticalAlignment="Middle">
 					<font size="10" isBold="false"/>
 				</textElement>
-				<textFieldExpression><![CDATA["Metrology"]]></textFieldExpression>
+				<textFieldExpression><![CDATA[$F{patron_marca}]]></textFieldExpression>
 			</textField>
 			<textField>
 				<reportElement x="388" y="109" width="184" height="14" uuid="7a766376-c4c5-4f4f-a068-4c285162f789"/>
 				<textElement verticalAlignment="Middle">
 					<font size="10" isBold="false"/>
 				</textElement>
-				<textFieldExpression><![CDATA["2022-01-01"]]></textFieldExpression>
+				<textFieldExpression><![CDATA[$F{patron_fechacal}]]></textFieldExpression>
 			</textField>
 			<staticText>
 				<reportElement x="313" y="95" width="75" height="14" uuid="077f3804-9f69-4af8-8dbc-70577a6e3ca6"/>

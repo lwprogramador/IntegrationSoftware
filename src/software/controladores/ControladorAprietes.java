@@ -4,6 +4,7 @@
  */
 package software.controladores;
 
+import java.awt.Font;
 import java.awt.Toolkit;
 import java.sql.PreparedStatement;
 import java.util.ArrayList;
@@ -22,6 +23,7 @@ import javax.swing.table.DefaultTableModel;
 import software.modelos.ConsultaAprietes;
 import software.modelos.Herramienta;
 import software.modelos.HerramientaAprietes;
+import software.modelos.Patrones;
 
 /**
  *
@@ -49,6 +51,23 @@ public class ControladorAprietes {
         }
     }
 
+    public void cargarPatrones(JComboBox cmbPatrones, ArrayList<Patrones> patrones) {
+        try {
+            if (patrones == null) {
+                return;
+            }
+            cmbPatrones.removeAllItems();            
+
+            for (Patrones item : patrones) {
+                if (item.isActivo()) {
+                    cmbPatrones.addItem(String.valueOf(item.getCodigo()) + " | " + String.valueOf(item.getNombre()) + "|" +String.valueOf(item.getMarca()) + " - " + String.valueOf(item.getModelo()));
+                }
+            }
+        } catch (Exception e) {
+            confAplicacion.guardarLogger(this.getClass().toString() + " > cargarHerramientas", e.getMessage(), Arrays.toString(e.getStackTrace()).replace(",", "\n"));
+        }
+    }
+    
     public void cargarAprietes(JTable tblAprietes, Herramienta herramientaAjuste) {
         try {
             Vector columnas = new Vector();
@@ -85,9 +104,9 @@ public class ControladorAprietes {
                 }
                 vItem.add(icon);
                 vItem.add(item.getTxApriete());
-                vItem.add(String.format("%.5f", item.getApriete()).replaceAll(",", "."));
-                vItem.add(String.format("%.5f", item.getEmpMin()).replaceAll(",", "."));
+                vItem.add(String.format("%.5f", item.getApriete()).replaceAll(",", "."));                
                 vItem.add(String.format("%.5f", item.getEmpMax()).replaceAll(",", "."));
+                vItem.add(String.format("%.5f", item.getEmpMin()).replaceAll(",", "."));
                 vItem.add(String.format("%.5f", 0.0).replaceAll(",", "."));
 
                 modelo.addRow(vItem);
@@ -100,6 +119,7 @@ public class ControladorAprietes {
         }
     }
 
+    
     public String listarClientes(JComboBox comboClientes) {
         String Cliente = null;
         try {

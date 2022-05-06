@@ -5,10 +5,7 @@
 package software.controladores;
 
 import java.awt.HeadlessException;
-import java.io.BufferedInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -21,9 +18,7 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JWindow;
 import javax.swing.SwingConstants;
-import software.Software;
 import software.modelos.Usuario;
-import software.vistas.Contenedor;
 import software.vistas.Login;
 
 /**
@@ -47,7 +42,7 @@ public class ControladorInicio {
         } catch (Exception e) {
             confAplicacion.guardarLogger(this.getClass().toString() + " > cargarAplicacion", e.getMessage(), Arrays.toString(e.getStackTrace()).replace(",", "\n"));
         }
-        splashVentana.setSize(1000, 450);
+        splashVentana.setSize(1000, 500);
         splashVentana.setLocationRelativeTo(null);
         splashVentana.setVisible(true);
 
