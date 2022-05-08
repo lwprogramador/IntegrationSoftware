@@ -78,69 +78,78 @@ public class ReportesPDF {
         try {
 
             ConexionBD con = new ConexionBD();
-            PreparedStatement queryEjecutar = con.prepararQuery(this.propSis.getProperty("sql.traerseries"));
-            queryEjecutar.setInt(1, Integer.parseInt(codigoAjuste));
-            ResultSet datosSeries = queryEjecutar.executeQuery();
+            PreparedStatement queryEjecutarAprietes;
 
-            XYSeries valAplicado = new XYSeries("Valor Aplicado");
-            XYSeries aux1 = new XYSeries("Aux 1");
-            XYSeries aux2 = new XYSeries("Aux 2");
+            queryEjecutarAprietes = con.prepararQuery(this.propSis.getProperty("sql.reportetraeraprietes"));
+            queryEjecutarAprietes.setInt(1, Integer.parseInt(codigoAjuste));
+            ResultSet datossAprietes = queryEjecutarAprietes.executeQuery();
 
-            if (datosSeries != null) {
-                int count = 0;
-                while (datosSeries.next()) {
-                    valAplicado.add(count, datosSeries.getInt("det_val_apriete"));
-                    aux1.add(count, datosSeries.getDouble("det_auxiliar_1"));
-                    aux2.add(count, datosSeries.getDouble("det_auxiliar_2"));
-                    count++;
+            while (datossAprietes.next()) {
+                PreparedStatement queryEjecutar = con.prepararQuery(this.propSis.getProperty("sql.reportetraervaloresaprietes"));
+                queryEjecutar.setString(1, datossAprietes.getString("tx_apriete"));
+                queryEjecutar.setInt(2, Integer.parseInt(codigoAjuste));
+                ResultSet datosSeries = queryEjecutar.executeQuery();
+                int MAX_RANGE = 0;
+
+                XYSeries valAplicado = new XYSeries("Valor Aplicado");
+
+                if (datosSeries != null) {
+                    int count = 0;
+                    while (datosSeries.next()) {
+                        valAplicado.add(count, datosSeries.getFloat("valor_apriete"));
+                        if(datosSeries.getFloat("valor_apriete") > (MAX_RANGE - 1000)){
+                            MAX_RANGE = datosSeries.getInt("valor_apriete");
+                        }
+                        count++;
+                    }                    
+                    valAplicado.add(count, 0);
+                    MAX_RANGE += (MAX_RANGE * 0.3);
                 }
+
+                XYSeriesCollection dsValAplicado = new XYSeriesCollection();
+                dsValAplicado.addSeries(valAplicado);
+                //construct the plot
+                XYPlot plot = new XYPlot();
+                plot.setDataset(0, dsValAplicado);
+                //customize the plot with renderers and axis
+                plot.setRenderer(0, new XYSplineRenderer());//use default fill paint for first series
+                XYSplineRenderer splinerenderer = new XYSplineRenderer();
+                splinerenderer.setSeriesFillPaint(0, Color.BLUE);
+                plot.setRenderer(1, splinerenderer);
+                plot.setRangeAxis(0, new NumberAxis("Valor Aplicado"));
+                plot.setDomainAxis(new NumberAxis(""));
+
+                ValueAxis axis = plot.getDomainAxis();
+                axis.setAutoRange(true);
+                //axis.setFixedAutoRange(Double.parseDouble(MAX_RANGE + ""));
+                axis = plot.getRangeAxis();
+                axis.setRange(0.0, MAX_RANGE);
+
+               // plot.setDomainAxis(axis);
+                //Map the data to the appropriate axis
+                plot.mapDatasetToRangeAxis(0, 0);
+                plot.mapDatasetToRangeAxis(1, 1);
+
+                //generate the chart
+                JFreeChart chart = new JFreeChart("Representación Gráfica", null, plot, true);
+                chart.setBackgroundPaint(Color.WHITE);
+
+                BufferedImage objBufferedImage = chart.createBufferedImage(900, 550);
+                ByteArrayOutputStream bas = new ByteArrayOutputStream();
+                try {
+                    ImageIO.write(objBufferedImage, "png", bas);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+                byte[] byteArray = bas.toByteArray();
+
+                InputStream in = new ByteArrayInputStream(byteArray);
+                BufferedImage image = ImageIO.read(in);
+                File outputfile = new File("." + confAplicacion.SISTEMA_SEPARADOR_RUTA + "recursos" + confAplicacion.SISTEMA_SEPARADOR_RUTA + datossAprietes.getString("tx_apriete") + ".png");
+                ImageIO.write(image, "png", outputfile);
+
             }
-
-            XYSeriesCollection dsValAplicado = new XYSeriesCollection();
-            XYSeriesCollection dsAux1 = new XYSeriesCollection();
-            XYSeriesCollection dsAux2 = new XYSeriesCollection();
-            dsValAplicado.addSeries(valAplicado);
-            dsAux1.addSeries(aux1);
-            dsAux2.addSeries(aux2);
-
-            //construct the plot
-            XYPlot plot = new XYPlot();
-            plot.setDataset(0, dsValAplicado);
-            plot.setDataset(1, dsAux1);
-            plot.setDataset(2, dsAux2);
-
-            //customize the plot with renderers and axis
-            plot.setRenderer(0, new XYSplineRenderer());//use default fill paint for first series
-            XYSplineRenderer splinerenderer = new XYSplineRenderer();
-            splinerenderer.setSeriesFillPaint(0, Color.BLUE);
-            plot.setRenderer(1, splinerenderer);
-            plot.setRangeAxis(0, new NumberAxis("Valor Aplicado"));
-            plot.setRangeAxis(1, new NumberAxis("Aux 1"));
-            plot.setRangeAxis(2, new NumberAxis("Aux 2"));
-            plot.setDomainAxis(new NumberAxis(""));
-
-            //Map the data to the appropriate axis
-            plot.mapDatasetToRangeAxis(0, 0);
-            plot.mapDatasetToRangeAxis(1, 1);
-
-            //generate the chart
-            JFreeChart chart = new JFreeChart("Representación Gráfica", null, plot, true);
-            chart.setBackgroundPaint(Color.WHITE);
-
-            BufferedImage objBufferedImage = chart.createBufferedImage(900, 450);
-            ByteArrayOutputStream bas = new ByteArrayOutputStream();
-            try {
-                ImageIO.write(objBufferedImage, "png", bas);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-
-            byte[] byteArray = bas.toByteArray();
-
-            InputStream in = new ByteArrayInputStream(byteArray);
-            BufferedImage image = ImageIO.read(in);
-            File outputfile = new File("." + confAplicacion.SISTEMA_SEPARADOR_RUTA + "recursos" + confAplicacion.SISTEMA_SEPARADOR_RUTA + "reportesimage.png");
-            ImageIO.write(image, "png", outputfile);
 
             DateTimeFormatter formatoFecha = DateTimeFormatter.ofPattern("yyyy-MM-dd");
             LocalDateTime fechaActual = LocalDateTime.now();

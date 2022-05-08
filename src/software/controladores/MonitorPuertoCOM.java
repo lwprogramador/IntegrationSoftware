@@ -111,11 +111,11 @@ public class MonitorPuertoCOM implements SerialPortDataListener {
             DefaultTableModel modeloTablaAprietes = (DefaultTableModel) this.camposActualizar.getTblAprietes().getModel();
 
             try {
-                String[] lineasData = lineas[0].substring(3).split("; ");
+                String[] lineasData = lineas[1].substring(3).split("; ");
                 try {
                     linea1 = Double.parseDouble(lineasData[1].replaceAll("Fuerza: ", "").replaceAll(" PiesLibras", "").trim());
-                    TEST_VAL++;
-                    linea1 = TEST_VAL;
+                    //TEST_VAL++;
+                    //linea1 = TEST_VAL;
                 } catch (NumberFormatException e) {
                     confAplicacion.guardarLogger(this.getClass().toString(), "linea1 = Double.parseDouble(lineasData[1]) " + e.getMessage(), Arrays.toString(e.getStackTrace()).replace(",", "\n"));
                 }

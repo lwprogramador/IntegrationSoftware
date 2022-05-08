@@ -608,8 +608,9 @@ public class ControladorAdministracion {
                     vectItem.add(item.getTxApriete());
                     vectItem.add(String.format("%.5f", item.getApriete()).replaceAll(",", "."));
                     vectItem.add(String.format("%.5f", item.getPorEmp()).replaceAll(",", "."));
-                    vectItem.add(String.format("%.5f", item.getEmpMin()).replaceAll(",", "."));
                     vectItem.add(String.format("%.5f", item.getEmpMax()).replaceAll(",", "."));
+                    vectItem.add(String.format("%.5f", item.getEmpMin()).replaceAll(",", "."));
+                    
 
                     modelTblAprietes.addRow(vectItem);
                 }

@@ -113,9 +113,9 @@ BEGIN
 
 	IF(COALESCE(existeOperador, 0) = 0 AND existeUsuario = 0) THEN 
 		INSERT INTO entidades.tbl_operador(_unico, tx_nombre, tx_apellido, tx_documento) 
-					VALUES((CONCAT('OP-', (SELECT COUNT(*) FROM entidades.tbl_operador))), UPPER($1), UPPER($2), UPPER($3)) RETURNING id INTO existeOperador;
+					VALUES((CONCAT('OP-', (select cont_operador from tbl_contadores))), UPPER($1), UPPER($2), UPPER($3)) RETURNING id INTO existeOperador;
 		INSERT INTO sesiones.tbl_usuario(_unico, idusuario, tx_usuario, tx_clave)
-						VALUES((CONCAT('USR-', (SELECT COUNT(*) FROM sesiones.tbl_usuario))), existeOperador, UPPER($4), (SELECT MD5($5)));
+						VALUES((CONCAT('USR-', (select cont_operador from tbl_contadores))), existeOperador, UPPER($4), (SELECT MD5($5)));
 		SELECT jsonb_agg(jsoni.*)::TEXT 
 		INTO datosTablaResponse
 		FROM(SELECT * FROM vst_operadores) AS jsoni;
@@ -225,6 +225,46 @@ ALTER SEQUENCE entidades.tbl_operador_id_seq OWNED BY entidades.tbl_operador.id;
 
 
 --
+-- Name: tbl_patron; Type: TABLE; Schema: entidades; Owner: postgres
+--
+
+CREATE TABLE entidades.tbl_patron (
+    id integer NOT NULL,
+    _unico character varying(100) NOT NULL,
+    bo_activo boolean DEFAULT true NOT NULL,
+    tx_nombre character varying(100) NOT NULL,
+    tx_marca character varying(100) NOT NULL,
+    tx_modelo character varying(100) NOT NULL,
+    tx_serie character varying(100) NOT NULL,
+    fe_ultima_calibracion character varying(100) NOT NULL
+);
+
+
+ALTER TABLE entidades.tbl_patron OWNER TO postgres;
+
+--
+-- Name: tbl_patron_id_seq; Type: SEQUENCE; Schema: entidades; Owner: postgres
+--
+
+CREATE SEQUENCE entidades.tbl_patron_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE entidades.tbl_patron_id_seq OWNER TO postgres;
+
+--
+-- Name: tbl_patron_id_seq; Type: SEQUENCE OWNED BY; Schema: entidades; Owner: postgres
+--
+
+ALTER SEQUENCE entidades.tbl_patron_id_seq OWNED BY entidades.tbl_patron.id;
+
+
+--
 -- Name: tbl_aprietes_logs; Type: TABLE; Schema: herramientas; Owner: postgres
 --
 
@@ -234,7 +274,10 @@ CREATE TABLE herramientas.tbl_aprietes_logs (
     idoperador integer NOT NULL,
     idherramienta integer NOT NULL,
     odt character varying(100) NOT NULL,
+    serie character varying(100) NOT NULL,
     cliente character varying(100) NOT NULL,
+    direccion character varying(500) NOT NULL,
+    patron integer NOT NULL,
     fecha_fin timestamp with time zone
 );
 
@@ -391,6 +434,43 @@ ALTER SEQUENCE herramientas.tbl_herramientas_id_seq OWNED BY herramientas.tbl_he
 
 
 --
+-- Name: tbl_contadores; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.tbl_contadores (
+    id integer NOT NULL,
+    cont_operador integer DEFAULT 1 NOT NULL,
+    cont_herramienta integer DEFAULT 1 NOT NULL,
+    cont_patron integer DEFAULT 1 NOT NULL,
+    cont_aprietes_realizados integer DEFAULT 1 NOT NULL
+);
+
+
+ALTER TABLE public.tbl_contadores OWNER TO postgres;
+
+--
+-- Name: tbl_contadores_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.tbl_contadores_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.tbl_contadores_id_seq OWNER TO postgres;
+
+--
+-- Name: tbl_contadores_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.tbl_contadores_id_seq OWNED BY public.tbl_contadores.id;
+
+
+--
 -- Name: vst_herramientas; Type: VIEW; Schema: public; Owner: postgres
 --
 
@@ -415,7 +495,7 @@ CREATE VIEW public.vst_herramientas AS
                     tbl_herramientas_aprietes.medida_minp AS emp_min
                    FROM herramientas.tbl_herramientas_aprietes
                   WHERE (tbl_herramientas_aprietes.idherramienta = h.id)
-                  ORDER BY tbl_herramientas_aprietes.tx_apriete) jsoni) AS aprietes
+                  ORDER BY tbl_herramientas_aprietes.id) jsoni) AS aprietes
    FROM herramientas.tbl_herramientas h;
 
 
@@ -487,6 +567,13 @@ ALTER TABLE ONLY entidades.tbl_operador ALTER COLUMN id SET DEFAULT nextval('ent
 
 
 --
+-- Name: tbl_patron id; Type: DEFAULT; Schema: entidades; Owner: postgres
+--
+
+ALTER TABLE ONLY entidades.tbl_patron ALTER COLUMN id SET DEFAULT nextval('entidades.tbl_patron_id_seq'::regclass);
+
+
+--
 -- Name: tbl_aprietes_logs id; Type: DEFAULT; Schema: herramientas; Owner: postgres
 --
 
@@ -515,6 +602,13 @@ ALTER TABLE ONLY herramientas.tbl_herramientas_aprietes ALTER COLUMN id SET DEFA
 
 
 --
+-- Name: tbl_contadores id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.tbl_contadores ALTER COLUMN id SET DEFAULT nextval('public.tbl_contadores_id_seq'::regclass);
+
+
+--
 -- Name: tbl_usuario id; Type: DEFAULT; Schema: sesiones; Owner: postgres
 --
 
@@ -527,6 +621,14 @@ ALTER TABLE ONLY sesiones.tbl_usuario ALTER COLUMN id SET DEFAULT nextval('sesio
 
 ALTER TABLE ONLY entidades.tbl_operador
     ADD CONSTRAINT tbl_operador_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: tbl_patron tbl_patron_pkey; Type: CONSTRAINT; Schema: entidades; Owner: postgres
+--
+
+ALTER TABLE ONLY entidades.tbl_patron
+    ADD CONSTRAINT tbl_patron_pkey PRIMARY KEY (id);
 
 
 --
@@ -562,6 +664,14 @@ ALTER TABLE ONLY herramientas.tbl_herramientas
 
 
 --
+-- Name: tbl_contadores tbl_contadores_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.tbl_contadores
+    ADD CONSTRAINT tbl_contadores_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: tbl_usuario tbl_usuario_pkey; Type: CONSTRAINT; Schema: sesiones; Owner: postgres
 --
 
@@ -574,6 +684,13 @@ ALTER TABLE ONLY sesiones.tbl_usuario
 --
 
 CREATE INDEX tbl_operador_id_idx ON entidades.tbl_operador USING btree (id);
+
+
+--
+-- Name: tbl_patron_id_idx; Type: INDEX; Schema: entidades; Owner: postgres
+--
+
+CREATE INDEX tbl_patron_id_idx ON entidades.tbl_patron USING btree (id);
 
 
 --
@@ -602,6 +719,13 @@ CREATE INDEX tbl_herramientas_aprietes_id_idx ON herramientas.tbl_herramientas_a
 --
 
 CREATE INDEX tbl_herramientas_id_idx ON herramientas.tbl_herramientas USING btree (id);
+
+
+--
+-- Name: tbl_contadores_id_idx; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX tbl_contadores_id_idx ON public.tbl_contadores USING btree (id);
 
 
 --
